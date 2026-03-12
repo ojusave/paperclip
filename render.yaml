@@ -19,8 +19,8 @@ services:
     runtime: node
     plan: free
 
-    # Skip UI tsc (tsc -b) to avoid React type errors on Render; Vite still builds the UI.
-    buildCommand: pnpm install --frozen-lockfile && pnpm --filter @paperclipai/ui exec vite build && pnpm --filter @paperclipai/server build
+    # Install with devDeps so Vite is available; skip UI tsc to avoid React type errors; then build server.
+    buildCommand: NODE_ENV=development pnpm install --frozen-lockfile && pnpm --filter @paperclipai/ui exec vite build && pnpm --filter @paperclipai/server build
     startCommand: node server/dist/index.js
 
     envVars:
