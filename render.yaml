@@ -1,10 +1,6 @@
 # Render Blueprint for Paperclip
-# https://github.com/ojusave/paperclip
-# Open-source orchestration for zero-human companies (Node server + React UI, PostgreSQL)
-#
-# Storage: Default is local_disk (ephemeral on Render — attachments/run logs lost on redeploy).
-# For persistent storage, either set up S3 (PAPERCLIP_STORAGE_PROVIDER=s3 + bucket + AWS/R2 keys in Dashboard)
-# or use a paid plan + Persistent Disk and set PAPERCLIP_HOME to the disk path. See doc/RENDER.md.
+# https://github.com/paperclipai/paperclip
+# One web service + Postgres + Render Persistent Disk (paid plan). See doc/RENDER.md.
 
 databases:
   - name: paperclip-db
@@ -17,11 +13,16 @@ services:
   - type: web
     name: paperclip
     runtime: node
-    plan: free
+    plan: starter
 
-    # Install with devDeps so Vite is available; skip UI tsc to avoid React type errors; then build server.
-    buildCommand: NODE_ENV=development pnpm install --frozen-lockfile && pnpm --filter @paperclipai/ui exec vite build && pnpm --filter @paperclipai/server build
-    startCommand: node server/dist/index.js
+    disk:
+      name: paperclip-data
+      mountPath: /opt/render/project/src/paperclip-data
+      sizeGB: 5
+
+    # Skip server tsc (avoids upstream type error); run server with tsx so it transpiles at runtime.
+    buildCommand: NODE_ENV=development pnpm install --frozen-lockfile && pnpm --filter @paperclipai/ui exec vite build
+    startCommand: pnpm --filter @paperclipai/server exec tsx src/index.ts
 
     envVars:
       - key: NODE_ENV
@@ -40,8 +41,8 @@ services:
         value: private
       - key: PAPERCLIP_MIGRATION_AUTO_APPLY
         value: "true"
-      # --- Auth: set BETTER_AUTH_SECRET in Dashboard (e.g. openssl rand -base64 32) ---
-      # PAPERCLIP_PUBLIC_URL is optional for private deployment; auth uses request host (auto).
+      - key: PAPERCLIP_HOME
+        value: /opt/render/project/src/paperclip-data
       - key: BETTER_AUTH_SECRET
         sync: false
 
