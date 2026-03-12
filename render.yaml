@@ -22,7 +22,8 @@ services:
 
     # Skip server tsc (avoids upstream type error); run server with tsx so it transpiles at runtime.
     buildCommand: NODE_ENV=development pnpm install --frozen-lockfile && pnpm --filter @paperclipai/ui exec vite build
-    startCommand: pnpm --filter @paperclipai/server exec tsx src/index.ts
+    # Run the server package's "dev" script (tsx src/index.ts) so cwd and paths match local dev.
+    startCommand: pnpm --filter @paperclipai/server dev
 
     envVars:
       - key: NODE_ENV
